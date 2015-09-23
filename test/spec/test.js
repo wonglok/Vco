@@ -243,12 +243,67 @@
 			setTimeout(function(){
 				assert(state.index === 3);
 				done();
-			}, 100);
+			}, 10);
 
 		});
 
-
 	});
+
+
+
+	describe('Clock', function(){
+
+		it('should update current time', function(done){
+			var Clock = Vco.get('Clock');
+			var clock = new Clock();
+
+			clock.updateTime();
+
+			var cTime = clock.cTime;
+
+			setTimeout(function(){
+				clock.updateTime();
+
+				var cTime2 = clock.cTime;
+
+				assert(cTime2 !== cTime);
+
+				done();
+			}, 10);
+
+		});
+	});
+
+	describe('Loop Module', function(){
+
+		it('shuold render after start', function(done){
+			var loop = Vco.get('mod.loop');
+			var state = {
+				index: 0
+			};
+			var render = function(){
+				state.index++;
+			};
+
+			loop.setRender(render);
+			loop.start();
+
+			setTimeout(function(){
+				loop.stop();
+				assert(state.index !== 0);
+
+				done();
+			}, 50);
+
+		});
+	});
+
+
+
+
+
+
+
 
 
 

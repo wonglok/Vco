@@ -237,6 +237,103 @@
 		return FrameBudgetTaskManger;
 	});
 
+	Vco.set('Clock', function(){
+
+		function Clock(){
+			var self = this;
+			self.lastTime = 0; //last time.
+			self.cTime = 0; //now
+			self.eTime = 0; //elapsted time 16~17
+			self.sTime = 0; //stepping time
+		}
+		Clock.prototype = {
+			constructor: Clock,
+			now: function(cTime){
+				var time = cTime || window.performance.now() || Date.now() || new Date().getTime();
+				return time;
+			},
+			updateTime: function(cTime){
+				this.cTime = this.now(cTime);
+				if (this.lastTime !== 0) {
+					var elapsed = this.cTime - this.lastTime;
+					this.eTime = elapsed;
+					this.lastTime = this.cTime;
+					this.sTime = this.sTime + 0.01;
+					return elapsed;
+				}
+
+				this.lastTime = this.cTime;
+				this.eTime = false;
+				return false;
+			},
+			resetTime: function(){
+				this.lastTime = 0;
+				this.sTime = 0;
+			}
+		};
+
+		return Clock;
+	});
+
+	Vco.set('mod.clock', function(){
+		var Clock = Vco.get('Clock');
+		var clock = new Clock();
+		return clock;
+	});
+
+	Vco.set('mod.fbtm', function(){
+		var FrameBudgetTaskManager = Vco.get('FrameBudgetTaskManager');
+		var fbtm = new FrameBudgetTaskManager();
+		return fbtm;
+	});
+
+
+	Vco.set('mod.loop', function (){
+		var render = function noop(){ console.log('haven"t add render function'); };
+
+		var fbtm = Vco.get('mod.fbtm');
+		var clock = Vco.get('mod.clock');
+
+		var timerID = 0;
+		var busy = false;
+
+		function loop(fsTime){
+			if (timerID === null){ return; }
+			timerID = window.requestAnimationFrame(loop);
+
+			clock.updateTime(fsTime);
+
+			render(fsTime);
+
+			fbtm.stepTask(fsTime);
+
+			busy = false;
+		}
+
+		function start(){
+			console.log('STARTING...');
+			if (!busy){
+				busy = true;
+				timerID = window.requestAnimationFrame(loop);
+			}
+		}
+		function stop(){
+			console.log('STOPPING...');
+			window.cancelAnimationFrame(timerID);
+			timerID = null;
+		}
+
+		function setRender(newRender){
+			render = newRender;
+		}
+
+		return {
+			start: start,
+			stop: stop,
+			setRender: setRender
+		};
+	});
+
 
 }(window.Vco));
 
